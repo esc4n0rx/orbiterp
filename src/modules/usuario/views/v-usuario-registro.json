@@ -1,0 +1,457 @@
+{
+  "id": "v-usuario-registro",
+  "title": "Cadastro de Usuário",
+  "alias": "us01",
+  "code": "USR_REG_001",
+  "type": "form",
+  "method": "POST",
+  "module": "usuario",
+  "category": "Administração",
+  "description": "Formulário para cadastro de novos usuários no sistema com validações completas e integração com ViaCEP",
+  "version": "1.0.0",
+  "author": "OrbitERP Team",
+  "permissions": {
+    "required": ["admin", "adminall"],
+    "forbidden": ["viewer"]
+  },
+  "metadata": {
+    "icon": "user-plus",
+    "color": "#10B981",
+    "tags": ["cadastro", "usuario", "administracao"],
+    "lastModified": "2025-06-27T00:00:00.000Z",
+    "estimatedTime": "5-10 minutos"
+  },
+  "apiSubmit": "/api/register",
+  "apiData": null,
+  "apiValidation": "/api/register/check-availability",
+  "auth": true,
+  "layout": {
+    "columns": 2,
+    "responsive": true,
+    "spacing": "medium"
+  },
+  "sections": [
+    {
+      "title": "Dados Pessoais",
+      "icon": "user",
+      "collapsible": false,
+      "fields": ["nome", "email", "username", "cpf", "telefone"]
+    },
+    {
+      "title": "Credenciais de Acesso",
+      "icon": "lock",
+      "collapsible": false,
+      "fields": ["senha", "role", "cargo", "status"]
+    },
+    {
+      "title": "Endereço",
+      "icon": "map-pin",
+      "collapsible": true,
+      "fields": ["cep", "endereco", "numero", "complemento", "bairro", "cidade", "estado"]
+    },
+    {
+      "title": "Permissões e Observações",
+      "icon": "shield-check",
+      "collapsible": true,
+      "fields": ["modulosLiberados", "viewsLiberadas", "observacoes"]
+    }
+  ],
+  "fields": [
+    {
+      "label": "Nome Completo",
+      "name": "nome",
+      "type": "text",
+      "required": true,
+      "placeholder": "Digite o nome completo do usuário",
+      "minLength": 5,
+      "maxLength": 255,
+      "validation": {
+        "pattern": "^[A-Za-zÀ-ÿ\\s]{5,}$",
+        "message": "Nome deve conter pelo menos nome e sobrenome"
+      },
+      "help": "Informe nome e sobrenome completos",
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "E-mail",
+      "name": "email",
+      "type": "email",
+      "required": true,
+      "placeholder": "usuario@empresa.com",
+      "maxLength": 255,
+      "validation": {
+        "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+        "message": "E-mail deve ter formato válido"
+      },
+      "help": "E-mail será usado para login e recuperação de senha",
+      "onChange": {
+        "debounce": 500,
+        "validation": "checkEmailAvailability"
+      },
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Nome de Usuário",
+      "name": "username",
+      "type": "text",
+      "required": true,
+      "placeholder": "usuario.silva",
+      "minLength": 3,
+      "maxLength": 30,
+      "validation": {
+        "pattern": "^[a-zA-Z0-9_.]{3,30}$",
+        "message": "Apenas letras, números, pontos e underscores"
+      },
+      "help": "Nome único para login no sistema",
+      "onChange": {
+        "debounce": 500,
+        "validation": "checkUsernameAvailability"
+      },
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "CPF",
+      "name": "cpf",
+      "type": "text",
+      "required": true,
+      "mask": "999.999.999-99",
+      "placeholder": "000.000.000-00",
+      "validation": {
+        "cpf": true,
+        "message": "CPF deve ser válido"
+      },
+      "help": "Cadastro de Pessoa Física",
+      "onChange": {
+        "debounce": 500,
+        "validation": "checkCPFAvailability"
+      },
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Telefone",
+      "name": "telefone",
+      "type": "text",
+      "mask": "(99) 99999-9999",
+      "placeholder": "(11) 99999-9999",
+      "validation": {
+        "phone": true,
+        "message": "Telefone deve ter formato válido"
+      },
+      "help": "Telefone para contato (opcional)",
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Senha",
+      "name": "senha",
+      "type": "password",
+      "required": true,
+      "placeholder": "Mínimo 6 caracteres",
+      "minLength": 6,
+      "maxLength": 128,
+      "validation": {
+        "strength": true,
+        "message": "Senha deve ter pelo menos 6 caracteres"
+      },
+      "help": "Use uma senha forte com letras, números e símbolos",
+      "showStrength": true,
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Função/Cargo",
+      "name": "cargo",
+      "type": "text",
+      "placeholder": "Ex: Analista de Sistemas",
+      "maxLength": 100,
+      "help": "Cargo ou função do usuário na empresa",
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Nível de Acesso",
+      "name": "role",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "user", "label": "Usuário Padrão", "description": "Acesso básico ao sistema" },
+        { "value": "manager", "label": "Gerente/Supervisor", "description": "Acesso gerencial com algumas permissões administrativas" },
+        { "value": "admin", "label": "Administrador", "description": "Acesso completo exceto configurações críticas" },
+        { "value": "adminall", "label": "Super Administrador", "description": "Acesso total ao sistema", "restricted": true }
+      ],
+      "default": "user",
+      "help": "Define o nível de permissões do usuário",
+      "conditional": {
+        "field": "role",
+        "value": "adminall",
+        "show": "req.user.role === 'adminall'"
+      },
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Status",
+      "name": "status",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "ATIVO", "label": "Ativo", "color": "green" },
+        { "value": "INATIVO", "label": "Inativo", "color": "gray" },
+        { "value": "SUSPENSO", "label": "Suspenso", "color": "red" }
+      ],
+      "default": "ATIVO",
+      "help": "Status atual do usuário no sistema",
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "CEP",
+      "name": "cep",
+      "type": "text",
+      "mask": "99999-999",
+      "placeholder": "00000-000",
+      "validation": {
+        "pattern": "^\\d{5}-?\\d{3}$",
+        "message": "CEP deve ter formato válido"
+      },
+      "help": "CEP será usado para preenchimento automático do endereço",
+      "onChange": {
+        "debounce": 1000,
+        "fetch": "https://viacep.com.br/ws/{{value}}/json/",
+        "mapResult": {
+          "logradouro": "endereco",
+          "bairro": "bairro",
+          "localidade": "cidade",
+          "uf": "estado"
+        },
+        "onError": "CEP não encontrado"
+      },
+      "grid": {
+        "xs": 12,
+        "md": 4
+      }
+    },
+    {
+      "label": "Endereço",
+      "name": "endereco",
+      "type": "text",
+      "placeholder": "Rua, Avenida, etc.",
+      "maxLength": 255,
+      "help": "Logradouro completo",
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Número",
+      "name": "numero",
+      "type": "text",
+      "placeholder": "123",
+      "maxLength": 20,
+      "help": "Número da residência/empresa",
+      "grid": {
+        "xs": 12,
+        "md": 2
+      }
+    },
+    {
+      "label": "Complemento",
+      "name": "complemento",
+      "type": "text",
+      "placeholder": "Apto 101, Bloco A, etc.",
+      "maxLength": 100,
+      "help": "Informações adicionais do endereço",
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Bairro",
+      "name": "bairro",
+      "type": "text",
+      "placeholder": "Nome do bairro",
+      "maxLength": 100,
+      "help": "Bairro do endereço",
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Cidade",
+      "name": "cidade",
+      "type": "text",
+      "placeholder": "Nome da cidade",
+      "maxLength": 100,
+      "help": "Cidade do endereço",
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Estado",
+      "name": "estado",
+      "type": "select",
+      "options": [
+        { "value": "AC", "label": "Acre" },
+        { "value": "AL", "label": "Alagoas" },
+        { "value": "AP", "label": "Amapá" },
+        { "value": "AM", "label": "Amazonas" },
+        { "value": "BA", "label": "Bahia" },
+        { "value": "CE", "label": "Ceará" },
+        { "value": "DF", "label": "Distrito Federal" },
+        { "value": "ES", "label": "Espírito Santo" },
+        { "value": "GO", "label": "Goiás" },
+        { "value": "MA", "label": "Maranhão" },
+        { "value": "MT", "label": "Mato Grosso" },
+        { "value": "MS", "label": "Mato Grosso do Sul" },
+        { "value": "MG", "label": "Minas Gerais" },
+        { "value": "PA", "label": "Pará" },
+        { "value": "PB", "label": "Paraíba" },
+        { "value": "PR", "label": "Paraná" },
+        { "value": "PE", "label": "Pernambuco" },
+        { "value": "PI", "label": "Piauí" },
+        { "value": "RJ", "label": "Rio de Janeiro" },
+        { "value": "RN", "label": "Rio Grande do Norte" },
+        { "value": "RS", "label": "Rio Grande do Sul" },
+        { "value": "RO", "label": "Rondônia" },
+        { "value": "RR", "label": "Roraima" },
+        { "value": "SC", "label": "Santa Catarina" },
+        { "value": "SP", "label": "São Paulo" },
+        { "value": "SE", "label": "Sergipe" },
+        { "value": "TO", "label": "Tocantins" }
+      ],
+      "help": "Estado/UF do endereço",
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Módulos Liberados",
+      "name": "modulosLiberados",
+      "type": "json",
+      "default": { "type": "all" },
+      "help": "Configuração de módulos que o usuário pode acessar",
+      "advanced": true,
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Views Liberadas",
+      "name": "viewsLiberadas",
+      "type": "json",
+      "default": { "type": "all" },
+      "help": "Configuração de views que o usuário pode acessar",
+      "advanced": true,
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    },
+    {
+      "label": "Observações",
+      "name": "observacoes",
+      "type": "textarea",
+      "placeholder": "Informações adicionais sobre o usuário...",
+      "rows": 4,
+      "maxLength": 1000,
+      "help": "Informações adicionais sobre o usuário",
+      "grid": {
+        "xs": 12
+      }
+    }
+  ],
+  "actions": [
+    {
+      "type": "submit",
+      "label": "Cadastrar Usuário",
+      "icon": "save",
+      "color": "primary",
+      "loading": true,
+      "loadingText": "Salvando...",
+      "successMessage": "Usuário cadastrado com sucesso!",
+      "validation": {
+        "required": ["nome", "email", "username", "cpf", "senha", "role", "status"]
+      }
+    },
+    {
+      "type": "button",
+      "label": "Cancelar",
+      "icon": "x",
+      "color": "secondary",
+      "variant": "outline",
+      "onClick": {
+        "navigate": "/views/v-usuario-lista",
+        "confirm": {
+          "title": "Cancelar Cadastro",
+          "message": "Deseja realmente cancelar? Os dados não salvos serão perdidos.",
+          "confirmText": "Sim, cancelar",
+          "cancelText": "Continuar editando"
+        }
+      }
+    },
+    {
+      "type": "button",
+      "label": "Limpar Formulário",
+      "icon": "refresh-cw",
+      "color": "warning",
+      "variant": "ghost",
+      "onClick": {
+        "action": "reset",
+        "confirm": {
+          "title": "Limpar Formulário",
+          "message": "Deseja limpar todos os campos preenchidos?",
+          "confirmText": "Sim, limpar",
+          "cancelText": "Cancelar"
+        }
+      }
+    }
+  ],
+  "behaviors": {
+    "autoSave": false,
+    "validateOnBlur": true,
+    "showProgress": true,
+    "confirmBeforeLeave": true,
+    "resetAfterSubmit": true
+  },
+  "notifications": {
+    "success": {
+      "title": "Usuário Cadastrado",
+      "message": "O usuário foi cadastrado com sucesso no sistema.",
+      "duration": 5000
+    },
+    "error": {
+      "title": "Erro no Cadastro",
+      "message": "Ocorreu um erro ao cadastrar o usuário. Verifique os dados e tente novamente.",
+      "duration": 8000
+    }
+  }
+}

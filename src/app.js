@@ -6,6 +6,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const registerRoutes = require('./routes/registerRoutes');
+const viewRoutes = require('./routes/viewRoutes'); // Nova linha
 
 const app = express();
 
@@ -26,6 +27,7 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', registerRoutes);
+app.use('/api', viewRoutes); // Nova linha
 
 // Rota de health check
 app.get('/health', (req, res) => {
