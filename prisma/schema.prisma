@@ -11,14 +11,41 @@ datasource db {
 }
 
 model User {
-  id          Int         @id @default(autoincrement())
-  nome        String      @db.VarChar(255)
-  email       String      @unique @db.VarChar(255)
-  senha       String      @db.VarChar(255)
-  role        String      @default("user") @db.VarChar(50)
-  statusLogin StatusLogin @default(OFFLINE)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id              Int         @id @default(autoincrement())
+  nome            String      @db.VarChar(255)
+  email           String      @unique @db.VarChar(255)
+  username        String      @unique @db.VarChar(100)
+  cpf             String      @unique @db.VarChar(14)
+  senha           String      @db.VarChar(255)
+  role            String      @default("user") @db.VarChar(50)
+  cargo           String?     @db.VarChar(100)
+  telefone        String?     @db.VarChar(20)
+  status          UserStatus  @default(ATIVO)
+  statusLogin     StatusLogin @default(OFFLINE)
+  
+  // Endereço
+  endereco        String?     @db.VarChar(255)
+  numero          String?     @db.VarChar(20)
+  complemento     String?     @db.VarChar(100)
+  bairro          String?     @db.VarChar(100)
+  cidade          String?     @db.VarChar(100)
+  estado          String?     @db.VarChar(2)
+  cep             String?     @db.VarChar(10)
+  
+  // Permissões (JSON)
+  modulosLiberados Json       @default("{\"type\": \"all\"}")
+  viewsLiberadas   Json       @default("{\"type\": \"all\"}")
+  
+  // Metadados
+  observacoes     String?     @db.Text
+  criadoPor       Int?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relacionamento auto-referencial para rastrear quem criou o usuário
+  criador         User?       @relation("UserCreator", fields: [criadoPor], references: [id])
+  usuariosCriados User[]      @relation("UserCreator")
 
   @@map("users")
 }
@@ -26,4 +53,10 @@ model User {
 enum StatusLogin {
   LOGADO
   OFFLINE
+}
+
+enum UserStatus {
+  ATIVO
+  INATIVO
+  SUSPENSO
 }
