@@ -80,6 +80,66 @@ class UserModel {
   }
 
   /**
+   * Busca usuários por nome ou CPF
+   * @param {Object} filters - Filtros de busca
+   * @returns {Promise<Array>} Lista de usuários encontrados
+   */
+  static async searchUsers(filters) {
+    const where = {};
+    
+    if (filters.nome) {
+      where.nome = {
+        contains: filters.nome,
+        mode: 'insensitive'
+      };
+    }
+    
+    if (filters.cpf) {
+      where.cpf = {
+        contains: filters.cpf
+      };
+    }
+
+    // Se ambos os campos foram fornecidos, usar OR
+    if (filters.nome && filters.cpf) {
+      where.OR = [
+        {
+          nome: {
+            contains: filters.nome,
+            mode: 'insensitive'
+          }
+        },
+        {
+          cpf: {
+            contains: filters.cpf
+          }
+        }
+      ];
+      delete where.nome;
+      delete where.cpf;
+    }
+
+    return await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        username: true,
+        cpf: true,
+        role: true,
+        status: true,
+        statusLogin: true,
+        createdAt: true
+      },
+      orderBy: {
+        nome: 'asc'
+      },
+      take: 20 // Limita a 20 resultados para performance
+    });
+  }
+
+  /**
    * Lista todos os usuários com paginação
    * @param {Object} options - Opções de busca
    * @returns {Promise<Object>} Lista de usuários e metadados
@@ -250,6 +310,20 @@ class UserModel {
     return await prisma.user.update({
       where: { id },
       data: { statusLogin: status }
+    });
+  }
+
+  /**
+   * Conta usuários por role
+   * @param {string} role - Role a ser contada
+   * @returns {Promise<number>} Quantidade de usuários
+   */
+  static async countByRole(role) {
+    return await prisma.user.count({
+      where: { 
+        role,
+        status: 'ATIVO' // Conta apenas usuários ativos
+      }
     });
   }
 
