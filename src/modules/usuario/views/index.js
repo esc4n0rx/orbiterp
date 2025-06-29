@@ -4,10 +4,12 @@
 
 const registroView = require('./v-usuario-registro.json');
 const edicaoView = require('./v-usuario-edicao.json');
+const listaView = require('./v-usuario-lista.json');
 
 const views = {
   'v-usuario-registro': registroView,
-  'v-usuario-edicao': edicaoView
+  'v-usuario-edicao': edicaoView,
+  'v-usuario-lista': listaView
 };
 
 /**

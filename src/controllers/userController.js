@@ -151,7 +151,8 @@ class UserController {
       // Formata dados dos usuários
       const formattedUsers = result.users.map(user => ({
         ...user,
-        cpf: formatCPF(user.cpf)
+        cpf: formatCPF(user.cpf),
+        cep: user.cep ? formatCEP(user.cep) : null
       }));
 
       res.json({
@@ -694,6 +695,222 @@ class UserController {
 
     } catch (error) {
       console.error('Erro ao forçar logout:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Ações em lote para usuários
+   * POST /api/users/batch
+   */
+  static async batchActions(req, res) {
+    try {
+      const { action, userIds, data } = req.body;
+
+      if (!action || !Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Ação e lista de usuários são obrigatórios'
+        });
+      }
+
+      // Valida IDs
+      const validIds = userIds.filter(id => !isNaN(id)).map(id => parseInt(id));
+      if (validIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Nenhum ID de usuário válido fornecido'
+        });
+      }
+
+      // Busca usuários
+      const users = await Promise.all(
+        validIds.map(id => UserModel.findById(id))
+      );
+      const existingUsers = users.filter(user => user !== null);
+
+      if (existingUsers.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Nenhum usuário encontrado'
+        });
+      }
+
+      // Verifica permissões para cada usuário
+      for (const user of existingUsers) {
+        // Não pode executar ações em si mesmo
+        if (user.id === req.user.id) {
+          return res.status(403).json({
+            success: false,
+            message: 'Não é possível executar ações em lote no seu próprio usuário'
+          });
+        }
+
+        // Apenas adminall pode executar ações em outros adminall
+        if (user.role === 'adminall' && req.user.role !== 'adminall') {
+          return res.status(403).json({
+            success: false,
+            message: 'Apenas super administradores podem executar ações em outros super administradores'
+          });
+        }
+      }
+
+      let results = [];
+
+      switch (action) {
+        case 'updateStatus':
+          if (!data?.status || !Object.values(USER_STATUS).includes(data.status)) {
+            return res.status(400).json({
+              success: false,
+              message: 'Status válido é obrigatório'
+            });
+          }
+
+          for (const user of existingUsers) {
+            try {
+              const updateData = { status: data.status };
+              if (data.status !== USER_STATUS.ATIVO) {
+                updateData.statusLogin = 'OFFLINE';
+              }
+              
+              await UserModel.update(user.id, updateData);
+              results.push({ id: user.id, success: true });
+            } catch (error) {
+              results.push({ id: user.id, success: false, error: error.message });
+            }
+          }
+          break;
+
+        case 'forceLogout':
+          for (const user of existingUsers) {
+            try {
+              await UserModel.updateLoginStatus(user.id, 'OFFLINE');
+              results.push({ id: user.id, success: true });
+            } catch (error) {
+              results.push({ id: user.id, success: false, error: error.message });
+            }
+          }
+          break;
+
+        case 'delete':
+          for (const user of existingUsers) {
+            try {
+              // Verifica se é o último adminall
+              if (user.role === 'adminall') {
+                const adminallCount = await UserModel.countByRole('adminall');
+                if (adminallCount <= 1) {
+                  results.push({ 
+                    id: user.id, 
+                    success: false, 
+                    error: 'Não é possível remover o último super administrador' 
+                  });
+                  continue;
+                }
+              }
+
+              await UserModel.softDelete(user.id);
+              results.push({ id: user.id, success: true });
+            } catch (error) {
+              results.push({ id: user.id, success: false, error: error.message });
+            }
+          }
+          break;
+
+        default:
+          return res.status(400).json({
+            success: false,
+            message: 'Ação não suportada'
+          });
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      const errorCount = results.filter(r => !r.success).length;
+
+      res.json({
+        success: true,
+        message: `Ação executada. ${successCount} sucessos, ${errorCount} erros`,
+        data: {
+          results,
+          summary: {
+            total: results.length,
+            success: successCount,
+            errors: errorCount
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('Erro em ação em lote:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Exporta lista de usuários
+   * GET /api/users/export
+   */
+  static async exportUsers(req, res) {
+    try {
+      const {
+        format = 'json',
+        status = null,
+        role = null
+      } = req.query;
+
+      const options = {
+        page: 1,
+        limit: 10000, // Limite alto para exportação
+        search: '',
+        status,
+        role,
+        orderBy: 'nome',
+        orderDirection: 'asc'
+      };
+
+      const result = await UserModel.findAll(options);
+
+      // Formata dados para exportação
+      const exportData = result.users.map(user => ({
+        id: user.id,
+        nome: user.nome,
+        email: user.email,
+        username: user.username,
+        cpf: formatCPF(user.cpf),
+        role: user.role,
+        cargo: user.cargo,
+        telefone: user.telefone,
+        status: user.status,
+        statusLogin: user.statusLogin,
+        cidade: user.cidade,
+        estado: user.estado,
+        criadoEm: user.createdAt,
+        atualizadoEm: user.updatedAt
+      }));
+
+      if (format === 'json') {
+        res.json({
+          success: true,
+          data: {
+            users: exportData,
+            total: exportData.length,
+            exportedAt: new Date().toISOString()
+          }
+        });
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: 'Formato de exportação não suportado'
+        });
+      }
+
+    } catch (error) {
+      console.error('Erro ao exportar usuários:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'

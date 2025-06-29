@@ -13,6 +13,8 @@ router.post('/users/search', authMiddleware, adminMiddleware, UserController.sea
 
 // Rotas que requerem permissões de admin
 router.get('/users', authMiddleware, adminMiddleware, UserController.listUsers);
+router.get('/users/export', authMiddleware, adminMiddleware, UserController.exportUsers);
+router.post('/users/batch', authMiddleware, adminMiddleware, UserController.batchActions);
 router.get('/users/:id', authMiddleware, adminMiddleware, UserController.getUserById);
 router.put('/users/:id', authMiddleware, adminMiddleware, UserController.updateUser);
 router.patch('/users/:id/status', authMiddleware, adminMiddleware, UserController.updateUserStatus);

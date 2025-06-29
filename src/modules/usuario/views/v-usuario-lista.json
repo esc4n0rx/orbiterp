@@ -1,0 +1,653 @@
+{
+  "id": "v-usuario-lista",
+  "title": "Lista de Usuários",
+  "alias": "us03",
+  "code": "USR_LST_001",
+  "type": "datatable",
+  "method": "GET",
+  "module": "usuario",
+  "category": "Administração",
+  "description": "Listagem completa de usuários com filtros avançados, paginação e ações em lote",
+  "version": "1.0.0",
+  "author": "OrbitERP Team",
+  "permissions": {
+    "required": ["admin", "adminall"],
+    "forbidden": ["viewer"]
+  },
+  "metadata": {
+    "icon": "users",
+    "color": "#3B82F6",
+    "tags": ["listagem", "usuario", "administracao", "gerenciamento"],
+    "lastModified": "2025-06-27T00:00:00.000Z",
+    "estimatedTime": "1-2 minutos"
+  },
+  "apiData": "/api/users",
+  "apiExport": "/api/users/export",
+  "apiBatch": "/api/users/batch",
+  "auth": true,
+  "layout": {
+    "responsive": true,
+    "spacing": "medium",
+    "showFilters": true,
+    "showSearch": true,
+    "showExport": true,
+    "showRefresh": true
+  },
+  "filters": [
+    {
+      "label": "Status",
+      "name": "status",
+      "type": "select",
+      "options": [
+        { "value": "", "label": "Todos os Status" },
+        { "value": "ATIVO", "label": "Ativo", "color": "green" },
+        { "value": "INATIVO", "label": "Inativo", "color": "gray" },
+        { "value": "SUSPENSO", "label": "Suspenso", "color": "red" }
+      ],
+      "placeholder": "Filtrar por status",
+      "grid": {
+        "xs": 12,
+        "md": 3
+      }
+    },
+    {
+      "label": "Nível de Acesso",
+      "name": "role",
+      "type": "select",
+      "options": [
+        { "value": "", "label": "Todos os Níveis" },
+        { "value": "user", "label": "Usuário Padrão" },
+        { "value": "manager", "label": "Gerente/Supervisor" },
+        { "value": "admin", "label": "Administrador" },
+        { "value": "adminall", "label": "Super Administrador" }
+      ],
+      "placeholder": "Filtrar por nível",
+      "grid": {
+        "xs": 12,
+        "md": 3
+      }
+    },
+    {
+      "label": "Buscar",
+      "name": "search",
+      "type": "text",
+      "placeholder": "Nome, email, username ou CPF...",
+      "debounce": 500,
+      "grid": {
+        "xs": 12,
+        "md": 6
+      }
+    }
+  ],
+  "columns": [
+    {
+      "key": "id",
+      "label": "ID",
+      "type": "number",
+      "sortable": true,
+      "width": 80,
+      "align": "center"
+    },
+    {
+      "key": "nome",
+      "label": "Nome",
+      "type": "text",
+      "sortable": true,
+      "searchable": true,
+      "minWidth": 200,
+      "render": {
+        "type": "avatar",
+        "showInitials": true,
+        "showText": true
+      }
+    },
+    {
+      "key": "email",
+      "label": "E-mail",
+      "type": "email",
+      "sortable": true,
+      "searchable": true,
+      "minWidth": 200,
+      "render": {
+        "type": "link",
+        "href": "mailto:{{value}}"
+      }
+    },
+    {
+      "key": "username",
+      "label": "Username",
+      "type": "text",
+      "sortable": true,
+      "searchable": true,
+      "width": 120,
+      "render": {
+        "type": "code"
+      }
+    },
+    {
+      "key": "cpf",
+      "label": "CPF",
+      "type": "text",
+      "sortable": true,
+      "searchable": true,
+      "width": 130,
+      "render": {
+        "type": "mask",
+        "mask": "999.999.999-99"
+      }
+    },
+    {
+      "key": "role",
+      "label": "Nível",
+      "type": "text",
+      "sortable": true,
+      "width": 120,
+      "render": {
+        "type": "badge",
+        "mapping": {
+          "user": { "label": "Usuário", "color": "blue" },
+          "manager": { "label": "Gerente", "color": "purple" },
+          "admin": { "label": "Admin", "color": "orange" },
+          "adminall": { "label": "Super Admin", "color": "red" }
+        }
+      }
+    },
+    {
+      "key": "cargo",
+      "label": "Cargo",
+      "type": "text",
+      "sortable": true,
+      "width": 150,
+      "render": {
+        "type": "text",
+        "placeholder": "Não informado"
+      }
+    },
+    {
+      "key": "status",
+      "label": "Status",
+      "type": "text",
+      "sortable": true,
+      "width": 100,
+      "render": {
+        "type": "badge",
+        "mapping": {
+          "ATIVO": { "label": "Ativo", "color": "green" },
+          "INATIVO": { "label": "Inativo", "color": "gray" },
+          "SUSPENSO": { "label": "Suspenso", "color": "red" }
+        }
+      }
+    },
+    {
+      "key": "statusLogin",
+      "label": "Conexão",
+      "type": "text",
+      "sortable": true,
+      "width": 100,
+      "render": {
+        "type": "indicator",
+        "mapping": {
+          "LOGADO": { "label": "Online", "color": "green", "icon": "circle" },
+          "OFFLINE": { "label": "Offline", "color": "gray", "icon": "circle" }
+        }
+      }
+    },
+    {
+      "key": "cidade",
+      "label": "Cidade",
+      "type": "text",
+      "sortable": true,
+      "width": 120,
+      "render": {
+        "type": "text",
+        "placeholder": "Não informado"
+      }
+    },
+    {
+      "key": "estado",
+      "label": "UF",
+      "type": "text",
+      "sortable": true,
+      "width": 60,
+      "align": "center"
+    },
+    {
+      "key": "createdAt",
+      "label": "Criado em",
+      "type": "datetime",
+      "sortable": true,
+      "width": 140,
+      "render": {
+        "type": "datetime",
+        "format": "dd/MM/yyyy HH:mm"
+      }
+    },
+    {
+      "key": "actions",
+      "label": "Ações",
+      "type": "actions",
+      "width": 120,
+      "align": "center",
+      "sticky": "right"
+    }
+  ],
+  "rowActions": [
+    {
+      "type": "button",
+      "label": "Editar",
+      "icon": "edit",
+      "color": "primary",
+      "variant": "ghost",
+      "size": "sm",
+      "onClick": {
+        "navigate": "/views/v-usuario-edicao",
+        "params": {
+          "id": "{{row.id}}"
+        }
+      },
+      "tooltip": "Editar usuário"
+    },
+    {
+      "type": "dropdown",
+      "label": "Mais",
+      "icon": "more-vertical",
+      "variant": "ghost",
+      "size": "sm",
+      "items": [
+        {
+          "label": "Ver Detalhes",
+          "icon": "eye",
+          "onClick": {
+            "modal": "userDetails",
+            "data": "{{row}}"
+          }
+        },
+        {
+          "label": "Alterar Status",
+          "icon": "toggle-right",
+          "onClick": {
+            "modal": "changeStatus",
+            "data": "{{row}}"
+          },
+          "condition": "{{row.id}} !== {{user.id}}"
+        },
+        {
+          "label": "Forçar Logout",
+          "icon": "log-out",
+          "onClick": {
+            "api": "/api/users/{{row.id}}/force-logout",
+            "method": "POST",
+            "confirm": {
+              "title": "Forçar Logout",
+              "message": "Tem certeza que deseja desconectar este usuário?",
+              "confirmText": "Sim, desconectar",
+              "cancelText": "Cancelar"
+            },
+            "successMessage": "Usuário desconectado com sucesso!",
+            "onSuccess": "refresh"
+          },
+          "condition": "{{row.statusLogin}} === 'LOGADO' && {{row.id}} !== {{user.id}}"
+        },
+        {
+          "type": "divider"
+        },
+        {
+          "label": "Remover",
+          "icon": "trash-2",
+          "color": "danger",
+          "onClick": {
+            "api": "/api/users/{{row.id}}",
+            "method": "DELETE",
+            "confirm": {
+              "title": "Remover Usuário",
+              "message": "Tem certeza que deseja remover o usuário {{row.nome}}? Esta ação não pode ser desfeita.",
+              "confirmText": "Sim, remover",
+              "cancelText": "Cancelar",
+              "type": "danger"
+            },
+            "successMessage": "Usuário removido com sucesso!",
+            "onSuccess": "refresh"
+          },
+          "condition": "{{row.id}} !== {{user.id}} && ({{row.role}} !== 'adminall' || {{user.role}} === 'adminall')"
+        }
+      ]
+    }
+  ],
+  "bulkActions": [
+    {
+      "label": "Alterar Status",
+      "icon": "toggle-right",
+      "color": "primary",
+      "onClick": {
+        "modal": "bulkChangeStatus"
+      }
+    },
+    {
+      "label": "Forçar Logout",
+      "icon": "log-out",
+      "color": "warning",
+      "onClick": {
+        "api": "/api/users/batch",
+        "method": "POST",
+        "data": {
+          "action": "forceLogout",
+          "userIds": "{{selectedIds}}"
+        },
+        "confirm": {
+          "title": "Forçar Logout em Lote",
+          "message": "Tem certeza que deseja desconectar {{selectedCount}} usuário(s)?",
+          "confirmText": "Sim, desconectar",
+          "cancelText": "Cancelar"
+        },
+        "successMessage": "Logout forçado executado com sucesso!",
+        "onSuccess": "refresh"
+      }
+    },
+    {
+      "label": "Remover Selecionados",
+      "icon": "trash-2",
+      "color": "danger",
+      "onClick": {
+        "api": "/api/users/batch",
+        "method": "POST",
+        "data": {
+          "action": "delete",
+          "userIds": "{{selectedIds}}"
+        },
+        "confirm": {
+          "title": "Remover Usuários",
+          "message": "Tem certeza que deseja remover {{selectedCount}} usuário(s)? Esta ação não pode ser desfeita.",
+          "confirmText": "Sim, remover",
+          "cancelText": "Cancelar",
+          "type": "danger"
+        },
+        "successMessage": "Usuários removidos com sucesso!",
+        "onSuccess": "refresh"
+      }
+    }
+  ],
+  "pagination": {
+    "enabled": true,
+    "pageSize": 10,
+    "pageSizeOptions": [10, 25, 50, 100],
+    "showTotal": true,
+    "showQuickJumper": true
+  },
+  "sorting": {
+    "enabled": true,
+    "multiple": false,
+    "defaultSort": {
+      "column": "createdAt",
+      "direction": "desc"
+    }
+  },
+  "selection": {
+    "enabled": true,
+    "type": "checkbox",
+    "selectAll": true,
+    "preserveSelection": false
+  },
+  "export": {
+    "enabled": true,
+    "formats": ["json"],
+    "filename": "usuarios_{{timestamp}}",
+    "api": "/api/users/export"
+  },
+  "refresh": {
+    "enabled": true,
+    "interval": null,
+    "showButton": true
+  },
+  "modals": [
+    {
+      "id": "userDetails",
+      "title": "Detalhes do Usuário",
+      "size": "lg",
+      "type": "info",
+      "fields": [
+        {
+          "label": "Nome Completo",
+          "name": "nome",
+          "type": "text",
+          "readonly": true
+        },
+        {
+          "label": "E-mail",
+          "name": "email",
+          "type": "email",
+          "readonly": true
+        },
+        {
+          "label": "Username",
+          "name": "username",
+          "type": "text",
+          "readonly": true
+        },
+        {
+          "label": "CPF",
+          "name": "cpf",
+          "type": "text",
+          "readonly": true
+        },
+        {
+          "label": "Telefone",
+          "name": "telefone",
+          "type": "text",
+          "readonly": true
+        },
+        {
+          "label": "Cargo",
+          "name": "cargo",
+          "type": "text",
+          "readonly": true
+        },
+        {
+          "label": "Nível de Acesso",
+          "name": "role",
+          "type": "text",
+          "readonly": true
+        },
+        {
+          "label": "Status",
+          "name": "status",
+          "type": "text",
+          "readonly": true
+        },
+        {
+          "label": "Status de Conexão",
+          "name": "statusLogin",
+          "type": "text",
+          "readonly": true
+        },
+        {
+          "label": "Criado em",
+          "name": "createdAt",
+          "type": "datetime",
+          "readonly": true
+        }
+      ],
+      "actions": [
+        {
+          "type": "button",
+          "label": "Editar",
+          "icon": "edit",
+          "color": "primary",
+          "onClick": {
+            "navigate": "/views/v-usuario-edicao",
+            "params": {
+              "id": "{{data.id}}"
+            },
+            "closeModal": true
+          }
+        },
+        {
+          "type": "button",
+          "label": "Fechar",
+          "icon": "x",
+          "color": "secondary",
+          "variant": "outline",
+          "onClick": {
+            "closeModal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "changeStatus",
+      "title": "Alterar Status",
+      "size": "md",
+      "type": "form",
+      "fields": [
+        {
+          "label": "Usuário",
+          "name": "nome",
+          "type": "text",
+          "readonly": true
+        },
+        {
+          "label": "Status Atual",
+          "name": "status",
+          "type": "text",
+          "readonly": true
+        },
+        {
+          "label": "Novo Status",
+          "name": "newStatus",
+          "type": "select",
+          "required": true,
+          "options": [
+            { "value": "ATIVO", "label": "Ativo", "color": "green" },
+            { "value": "INATIVO", "label": "Inativo", "color": "gray" },
+            { "value": "SUSPENSO", "label": "Suspenso", "color": "red" }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "submit",
+          "label": "Alterar Status",
+          "icon": "check",
+          "color": "primary",
+          "api": "/api/users/{{data.id}}/status",
+          "method": "PATCH",
+          "mapData": {
+            "status": "newStatus"
+          },
+          "successMessage": "Status alterado com sucesso!",
+          "onSuccess": "refresh",
+          "closeModal": true
+        },
+        {
+          "type": "button",
+          "label": "Cancelar",
+          "icon": "x",
+          "color": "secondary",
+          "variant": "outline",
+          "onClick": {
+            "closeModal": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "bulkChangeStatus",
+      "title": "Alterar Status em Lote",
+      "size": "md",
+      "type": "form",
+      "fields": [
+        {
+          "label": "Usuários Selecionados",
+          "name": "selectedCount",
+          "type": "text",
+          "readonly": true,
+          "value": "{{selectedCount}} usuário(s) selecionado(s)"
+        },
+        {
+          "label": "Novo Status",
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "options": [
+            { "value": "ATIVO", "label": "Ativo", "color": "green" },
+            { "value": "INATIVO", "label": "Inativo", "color": "gray" },
+            { "value": "SUSPENSO", "label": "Suspenso", "color": "red" }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "submit",
+          "label": "Alterar Status",
+          "icon": "check",
+          "color": "primary",
+          "api": "/api/users/batch",
+          "method": "POST",
+          "data": {
+            "action": "updateStatus",
+            "userIds": "{{selectedIds}}",
+            "data": {
+              "status": "{{status}}"
+            }
+          },
+          "successMessage": "Status alterado em lote com sucesso!",
+          "onSuccess": "refresh",
+          "closeModal": true
+        },
+        {
+          "type": "button",
+          "label": "Cancelar",
+          "icon": "x",
+          "color": "secondary",
+          "variant": "outline",
+          "onClick": {
+            "closeModal": true
+          }
+        }
+      ]
+    }
+  ],
+  "behaviors": {
+    "autoRefresh": false,
+    "preserveFilters": true,
+    "rememberPageSize": true,
+    "rememberSort": true,
+    "stickyHeader": true,
+    "virtualScrolling": false
+  },
+  "emptyState": {
+    "title": "Nenhum usuário encontrado",
+    "description": "Não há usuários cadastrados que correspondam aos filtros aplicados.",
+    "icon": "users",
+    "actions": [
+      {
+        "type": "button",
+        "label": "Cadastrar Usuário",
+        "icon": "plus",
+        "color": "primary",
+        "onClick": {
+          "navigate": "/views/v-usuario-registro"
+        }
+      },
+      {
+        "type": "button",
+        "label": "Limpar Filtros",
+        "icon": "filter-x",
+        "color": "secondary",
+        "variant": "outline",
+        "onClick": {
+          "action": "clearFilters"
+        }
+      }
+    ]
+  },
+  "notifications": {
+    "success": {
+      "title": "Sucesso",
+      "duration": 3000
+    },
+    "error": {
+      "title": "Erro",
+      "duration": 5000
+    }
+  }
+}
