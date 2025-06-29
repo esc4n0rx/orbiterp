@@ -6,10 +6,17 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
+    "start:docker": "node scripts/start.js",
     "db:migrate": "npx prisma migrate dev",
+    "db:migrate:deploy": "npx prisma migrate deploy",
     "db:generate": "npx prisma generate",
     "db:studio": "npx prisma studio",
-    "setup": "node scripts/createMasterUser.js"
+    "db:reset": "npx prisma migrate reset",
+    "setup": "node scripts/createMasterUser.js",
+    "setup:master": "node scripts/setup-master.js",
+    "health": "node scripts/healthcheck.js",
+    "docker:build": "docker build -t orbiterp .",
+    "docker:run": "docker run -p 3000:3000 orbiterp"
   },
   "dependencies": {
     "express": "^4.18.2",

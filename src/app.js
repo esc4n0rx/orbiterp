@@ -6,12 +6,17 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const registerRoutes = require('./routes/registerRoutes');
-const viewRoutes = require('./routes/viewRoutes'); // Nova linha
+const viewRoutes = require('./routes/viewRoutes');
+const healthRoutes = require('./routes/healthRoutes'); // Nova linha
 
 const app = express();
 
 // Middlewares globais
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*',
+  credentials: true
+}));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -23,21 +28,14 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
+// Health checks (sem prefixo /api)
+app.use('/', healthRoutes);
+
 // Rotas da API
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', registerRoutes);
-app.use('/api', viewRoutes); // Nova linha
-
-// Rota de health check
-app.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'OrbitERP API está funcionando',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
-});
+app.use('/api', viewRoutes);
 
 // Middleware de tratamento de rotas não encontradas
 app.use('*', (req, res) => {
@@ -78,7 +76,9 @@ app.use((error, req, res, next) => {
 
   res.status(500).json({
     success: false,
-    message: 'Erro interno do servidor'
+    message: process.env.NODE_ENV === 'production' 
+      ? 'Erro interno do servidor' 
+      : error.message
   });
 });
 
