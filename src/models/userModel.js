@@ -89,8 +89,7 @@ class UserModel {
     
     if (filters.nome) {
       where.nome = {
-        contains: filters.nome,
-        mode: 'insensitive'
+        contains: filters.nome
       };
     }
     
@@ -105,8 +104,7 @@ class UserModel {
       where.OR = [
         {
           nome: {
-            contains: filters.nome,
-            mode: 'insensitive'
+            contains: filters.nome
           }
         },
         {
