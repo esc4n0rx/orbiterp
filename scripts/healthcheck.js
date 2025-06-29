@@ -1,11 +1,12 @@
 const http = require('http');
 
 const options = {
-  hostname: 'localhost',
-  port: process.env.PORT || 3000,
+  hostname: '127.0.0.1', // Força IPv4 em vez de 'localhost'
+  port: process.env.PORT || 3001,
   path: '/health',
   method: 'GET',
-  timeout: 3000
+  timeout: 5000, // Aumenta timeout para 5s
+  family: 4 // Força IPv4
 };
 
 const req = http.request(options, (res) => {
@@ -29,4 +30,5 @@ req.on('timeout', () => {
   process.exit(1);
 });
 
+req.setTimeout(5000);
 req.end();

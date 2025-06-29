@@ -1,10 +1,11 @@
 # Multi-stage build para otimização
 FROM node:18-alpine AS base
 
-# Instalar dependências do sistema
+# Instalar dependências do sistema (incluindo curl para healthcheck)
 RUN apk add --no-cache \
     openssl \
     ca-certificates \
+    curl \
     && rm -rf /var/cache/apk/*
 
 # Configurar pnpm
@@ -51,9 +52,9 @@ ENV PORT=3001
 
 EXPOSE 3001
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node scripts/healthcheck.js
+# Health check melhorado - agora com curl como fallback
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD curl -f http://127.0.0.1:3001/health || node scripts/healthcheck.js
 
 # Script de inicialização
 CMD ["node", "scripts/start.js"]
