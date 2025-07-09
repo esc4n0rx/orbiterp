@@ -13,7 +13,7 @@ const app = express();
 
 // Middlewares globais
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: 'https://orbiterp.vercel.app', // URL padrão definida diretamente
   credentials: true
 }));
 
